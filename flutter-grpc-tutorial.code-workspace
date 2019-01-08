@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "flutter_client"
+		},
+		{
+			"path": "go-server"
+		},
+		{
+			"path": "api"
+		},
+		{
+			"path": "third_party"
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"amsokol",
+			"grpc",
+			"noname",
+			"protobuf",
+			"ptypes"
+		]
+	}
+}

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package v1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+// Notification is response for MyService.Subscribe method
+message Notification{
+    string message = 1;
+}
+
+service ChatService {
+    // Send send message to the server
+    rpc Send(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+
+    // Subscribe is streaming method example: server responds once a minute
+    rpc Subscribe(google.protobuf.Empty) returns (stream Notification) {}
+}
