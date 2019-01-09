@@ -120,7 +120,19 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  void onSentSuccess(String uuid, String text) {}
+  void onSentSuccess(String uuid, String text) {
+    debugPrint("message \"$text\" sent to the server");
+    ChatMessage message = ChatOutcomeMessage(
+      uuid,
+      text,
+      AnimationController(
+        duration: Duration.zero,
+        vsync: this,
+      ),
+      OutcomeMessageStatus.SENT,
+    );
+    _streamController.add(message);
+  }
 
   void onSentError(String uuid, String text, String error) {
     debugPrint("failed to send message \"$text\" to the server: $error");
