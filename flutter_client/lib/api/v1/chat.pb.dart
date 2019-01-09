@@ -22,6 +22,7 @@ class Notification extends $pb.GeneratedMessage {
   Notification copyWith(void Function(Notification) updates) => super.copyWith((message) => updates(message as Notification));
   $pb.BuilderInfo get info_ => _i;
   static Notification create() => new Notification();
+  Notification createEmptyInstance() => create();
   static $pb.PbList<Notification> createRepeated() => new $pb.PbList<Notification>();
   static Notification getDefault() => _defaultInstance ??= create()..freeze();
   static Notification _defaultInstance;

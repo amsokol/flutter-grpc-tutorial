@@ -23,6 +23,7 @@ class DoubleValue extends $pb.GeneratedMessage {
   DoubleValue copyWith(void Function(DoubleValue) updates) => super.copyWith((message) => updates(message as DoubleValue));
   $pb.BuilderInfo get info_ => _i;
   static DoubleValue create() => new DoubleValue();
+  DoubleValue createEmptyInstance() => create();
   static $pb.PbList<DoubleValue> createRepeated() => new $pb.PbList<DoubleValue>();
   static DoubleValue getDefault() => _defaultInstance ??= create()..freeze();
   static DoubleValue _defaultInstance;
@@ -49,6 +50,7 @@ class FloatValue extends $pb.GeneratedMessage {
   FloatValue copyWith(void Function(FloatValue) updates) => super.copyWith((message) => updates(message as FloatValue));
   $pb.BuilderInfo get info_ => _i;
   static FloatValue create() => new FloatValue();
+  FloatValue createEmptyInstance() => create();
   static $pb.PbList<FloatValue> createRepeated() => new $pb.PbList<FloatValue>();
   static FloatValue getDefault() => _defaultInstance ??= create()..freeze();
   static FloatValue _defaultInstance;
@@ -75,6 +77,7 @@ class Int64Value extends $pb.GeneratedMessage {
   Int64Value copyWith(void Function(Int64Value) updates) => super.copyWith((message) => updates(message as Int64Value));
   $pb.BuilderInfo get info_ => _i;
   static Int64Value create() => new Int64Value();
+  Int64Value createEmptyInstance() => create();
   static $pb.PbList<Int64Value> createRepeated() => new $pb.PbList<Int64Value>();
   static Int64Value getDefault() => _defaultInstance ??= create()..freeze();
   static Int64Value _defaultInstance;
@@ -101,6 +104,7 @@ class UInt64Value extends $pb.GeneratedMessage {
   UInt64Value copyWith(void Function(UInt64Value) updates) => super.copyWith((message) => updates(message as UInt64Value));
   $pb.BuilderInfo get info_ => _i;
   static UInt64Value create() => new UInt64Value();
+  UInt64Value createEmptyInstance() => create();
   static $pb.PbList<UInt64Value> createRepeated() => new $pb.PbList<UInt64Value>();
   static UInt64Value getDefault() => _defaultInstance ??= create()..freeze();
   static UInt64Value _defaultInstance;
@@ -127,6 +131,7 @@ class Int32Value extends $pb.GeneratedMessage {
   Int32Value copyWith(void Function(Int32Value) updates) => super.copyWith((message) => updates(message as Int32Value));
   $pb.BuilderInfo get info_ => _i;
   static Int32Value create() => new Int32Value();
+  Int32Value createEmptyInstance() => create();
   static $pb.PbList<Int32Value> createRepeated() => new $pb.PbList<Int32Value>();
   static Int32Value getDefault() => _defaultInstance ??= create()..freeze();
   static Int32Value _defaultInstance;
@@ -153,6 +158,7 @@ class UInt32Value extends $pb.GeneratedMessage {
   UInt32Value copyWith(void Function(UInt32Value) updates) => super.copyWith((message) => updates(message as UInt32Value));
   $pb.BuilderInfo get info_ => _i;
   static UInt32Value create() => new UInt32Value();
+  UInt32Value createEmptyInstance() => create();
   static $pb.PbList<UInt32Value> createRepeated() => new $pb.PbList<UInt32Value>();
   static UInt32Value getDefault() => _defaultInstance ??= create()..freeze();
   static UInt32Value _defaultInstance;
@@ -179,6 +185,7 @@ class BoolValue extends $pb.GeneratedMessage {
   BoolValue copyWith(void Function(BoolValue) updates) => super.copyWith((message) => updates(message as BoolValue));
   $pb.BuilderInfo get info_ => _i;
   static BoolValue create() => new BoolValue();
+  BoolValue createEmptyInstance() => create();
   static $pb.PbList<BoolValue> createRepeated() => new $pb.PbList<BoolValue>();
   static BoolValue getDefault() => _defaultInstance ??= create()..freeze();
   static BoolValue _defaultInstance;
@@ -205,6 +212,7 @@ class StringValue extends $pb.GeneratedMessage {
   StringValue copyWith(void Function(StringValue) updates) => super.copyWith((message) => updates(message as StringValue));
   $pb.BuilderInfo get info_ => _i;
   static StringValue create() => new StringValue();
+  StringValue createEmptyInstance() => create();
   static $pb.PbList<StringValue> createRepeated() => new $pb.PbList<StringValue>();
   static StringValue getDefault() => _defaultInstance ??= create()..freeze();
   static StringValue _defaultInstance;
@@ -231,6 +239,7 @@ class BytesValue extends $pb.GeneratedMessage {
   BytesValue copyWith(void Function(BytesValue) updates) => super.copyWith((message) => updates(message as BytesValue));
   $pb.BuilderInfo get info_ => _i;
   static BytesValue create() => new BytesValue();
+  BytesValue createEmptyInstance() => create();
   static $pb.PbList<BytesValue> createRepeated() => new $pb.PbList<BytesValue>();
   static BytesValue getDefault() => _defaultInstance ??= create()..freeze();
   static BytesValue _defaultInstance;

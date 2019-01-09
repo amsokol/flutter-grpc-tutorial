@@ -24,6 +24,7 @@ class Timestamp extends $pb.GeneratedMessage {
   Timestamp copyWith(void Function(Timestamp) updates) => super.copyWith((message) => updates(message as Timestamp));
   $pb.BuilderInfo get info_ => _i;
   static Timestamp create() => new Timestamp();
+  Timestamp createEmptyInstance() => create();
   static $pb.PbList<Timestamp> createRepeated() => new $pb.PbList<Timestamp>();
   static Timestamp getDefault() => _defaultInstance ??= create()..freeze();
   static Timestamp _defaultInstance;
