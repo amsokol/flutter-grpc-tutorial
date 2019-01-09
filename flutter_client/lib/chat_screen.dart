@@ -3,9 +3,6 @@ import 'dart:async';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 
-import 'package:grpc/grpc.dart' as $0;
-import 'api/v1/chat.pbgrpc.dart' as $1;
-
 import 'chat_message.dart';
 import 'chat_outcome_message.dart';
 import 'chat_income_message.dart';
@@ -21,8 +18,7 @@ class ChatScreen extends StatefulWidget {
 class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   static var _uuid = Uuid();
 
-  bool _active;
-  $0.ResponseStream<$1.Notification> _serverStream;
+  ChatService _service;
 
   final List<ChatMessage> _messages = <ChatMessage>[];
   final StreamController _streamController = StreamController<ChatMessage>();
@@ -33,45 +29,17 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _active = true;
-    _subscribeForMessages();
-  }
-
-  Future<void> _subscribeForMessages() async {
-    do {
-      try {
-        // open stream
-        _serverStream = ChatService.subscribe();
-        debugPrint("succesfully opened stream to the server");
-
-        await for (var notification in _serverStream) {
-          debugPrint("message from server: ${notification.message}");
-          ChatMessage message = ChatIncomeMessage(
-            _uuid.v4(),
-            notification.message,
-            AnimationController(
-              duration: Duration(milliseconds: 700),
-              vsync: this,
-            ),
-          );
-          _streamController.add(message);
-          debugPrint("_subscribeForMessages: ${message.text}");
-        }
-
-        debugPrint("stream is closed");
-      } catch (e) {
-        debugPrint("failed to get notifications from server: $e");
-      }
-    } while (_active);
+    _service = ChatService(
+        onSentSuccess: onSentSuccess,
+        onSentError: onSentError,
+        onReceivedSuccess: onReceivedSuccess,
+        onReceivedError: onReceivedError);
+    _service.receive();
   }
 
   @override
   void dispose() {
-    _active = false;
-    if (_serverStream != null) {
-      _serverStream.cancel();
-      _serverStream = null;
-    }
+    _service.shutdown();
     for (ChatMessage message in _messages)
       message.animationController.dispose();
     super.dispose();
@@ -152,6 +120,29 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
+  void onSentSuccess(String uuid, String text) {}
+
+  void onSentError(String uuid, String text, String error) {
+    debugPrint("failed to send message \"$text\" to the server: $error");
+  }
+
+  void onReceivedSuccess(String text) {
+    debugPrint("received message from the server: $text");
+    ChatMessage message = ChatIncomeMessage(
+      _uuid.v4(),
+      text,
+      AnimationController(
+        duration: Duration(milliseconds: 700),
+        vsync: this,
+      ),
+    );
+    _streamController.add(message);
+  }
+
+  void onReceivedError(String error) {
+    debugPrint("failed to receive messages from the server: $error");
+  }
+
   void _handleSubmitted(String text) {
     _textController.clear();
     setState(() {
@@ -171,32 +162,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _streamController.add(message);
 
     // async send message to the server
-    _sendMessage(text).then((_) {
-      ChatMessage message = ChatOutcomeMessage(
-        uuid,
-        text,
-        AnimationController(
-          duration: Duration.zero,
-          vsync: this,
-        ),
-        OutcomeMessageStatus.SENT,
-      );
-      _streamController.add(message);
-      debugPrint("_sendMessage: ${message.text}");
-    });
-  }
-
-  Future<void> _sendMessage(String text) async {
-    var sent = false;
-    do {
-      try {
-        await ChatService.send(text);
-        sent = true;
-        debugPrint("succesfully sent message \"$text\" to the server");
-      } catch (e) {
-        debugPrint("failed to send message \"$text\" to the server: $e");
-      }
-    } while (!sent);
+    _service.send(uuid, text);
   }
 
   void _updateMessages(ChatMessage message) {
