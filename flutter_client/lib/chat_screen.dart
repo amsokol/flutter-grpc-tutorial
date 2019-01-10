@@ -123,28 +123,30 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   void onSentSuccess(String uuid, String text) {
     debugPrint("message \"$text\" sent to the server");
-    ChatMessage message = ChatOutcomeMessage(
-      uuid,
-      text,
-      AnimationController(
-        duration: Duration.zero,
-        vsync: this,
-      ),
-      OutcomeMessageStatus.SENT,
-    );
-    _streamController.add(message);
+    var i = _messages.indexWhere((msg) => msg.uuid == uuid);
+    if (i != -1) {
+      var message = _messages[i];
+      if (message is ChatOutcomeMessage) {
+        message.controller.setStatus(OutcomeMessageStatus.SENT);
+      } else {
+        debugPrint(
+            "FAILED update status for message \"$uuid\": it is not ChatOutcomeMessage");
+      }
+    } else {
+      debugPrint("FAILED to find message \"$uuid\" to update status");
+    }
   }
 
   void onSentError(String uuid, String text, String error) {
-    debugPrint("failed to send message \"$text\" to the server: $error");
+    debugPrint("FAILED to send message \"$text\" to the server: $error");
   }
 
   void onReceivedSuccess(String text) {
     debugPrint("received message from the server: $text");
     ChatMessage message = ChatIncomeMessage(
-      _uuid.v4(),
-      text,
-      AnimationController(
+      uuid: _uuid.v4(),
+      text: text,
+      animationController: AnimationController(
         duration: Duration(milliseconds: 700),
         vsync: this,
       ),
@@ -153,7 +155,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   void onReceivedError(String error) {
-    debugPrint("failed to receive messages from the server: $error");
+    debugPrint("FAILED to receive messages from the server: $error");
   }
 
   void _handleSubmitted(String text) {
@@ -164,9 +166,10 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
     var uuid = _uuid.v4();
     ChatMessage message = ChatOutcomeMessage(
-      uuid,
-      text,
-      AnimationController(
+      uuid: uuid,
+      text: text,
+      controller: ChatOutcomeMessageController(),
+      animationController: AnimationController(
         duration: Duration(milliseconds: 700),
         vsync: this,
       ),
@@ -180,15 +183,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   void _updateMessages(ChatMessage message) {
     var i = _messages.indexWhere((msg) => msg.uuid == message.uuid);
-    if (i != -1) {
-      if (message is ChatOutcomeMessage) {
-        if ((_messages[i] as ChatOutcomeMessage).status != message.status) {
-          _messages[i].animationController.dispose();
-          _messages[i] = message;
-          message.animationController.forward();
-        }
-      }
-    } else {
+    if (i == -1) {
       // add new message to the chat
       _messages.insert(0, message);
       message.animationController.forward();

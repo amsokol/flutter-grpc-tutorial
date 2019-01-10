@@ -38,7 +38,7 @@ func (s *chatServiceServer) Subscribe(e *empty.Empty, stream v1.ChatService_Subs
 	log.Print("Subscribe requested")
 	for {
 		m := <-s.msg
-		n := v1.Message{Text: fmt.Sprintf("I have received from you: %s. Thank!", m)}
+		n := v1.Message{Text: fmt.Sprintf("I have received from you: %s. Thanks!", m)}
 		if err := stream.Send(&n); err != nil {
 			log.Printf("Stream connection failed: %v", err)
 			return nil

@@ -6,14 +6,52 @@ const String _name = "Me";
 
 enum OutcomeMessageStatus { UNKNOWN, SENT }
 
-class ChatOutcomeMessage extends ChatMessage {
-  final OutcomeMessageStatus status;
+class ChatOutcomeMessageController {
+  OutcomeMessageStatus status = OutcomeMessageStatus.UNKNOWN;
+
+  void Function(OutcomeMessageStatus oldStatus, OutcomeMessageStatus newStatus)
+      onStatusChanged;
+
+  void setStatus(OutcomeMessageStatus newStatus) {
+    var oldStatus = status;
+    status = newStatus;
+    if (onStatusChanged != null) {
+      onStatusChanged(oldStatus, newStatus);
+    }
+  }
+}
+
+class ChatOutcomeMessage extends StatefulWidget implements ChatMessage {
+  final String uuid;
+  final String text;
+  final AnimationController animationController;
+  final ChatOutcomeMessageController controller;
 
   ChatOutcomeMessage(
-      String uuid, String text, AnimationController animationController,
-      [OutcomeMessageStatus status = OutcomeMessageStatus.UNKNOWN])
-      : status = status,
-        super(uuid: uuid, text: text, animationController: animationController);
+      {this.uuid, this.text, this.controller, this.animationController})
+      : super(key: new ObjectKey(uuid));
+
+  @override
+  State createState() => ChatOutcomeMessageState(
+      text: text,
+      animationController: animationController,
+      controller: controller);
+}
+
+class ChatOutcomeMessageState extends State<ChatOutcomeMessage> {
+  final String text;
+  final AnimationController animationController;
+  final ChatOutcomeMessageController controller;
+
+  ChatOutcomeMessageState(
+      {this.text, this.animationController, this.controller}) {
+    controller.onStatusChanged = onStatusChanged;
+  }
+
+  void onStatusChanged(
+      OutcomeMessageStatus oldStatus, OutcomeMessageStatus newStatus) {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +81,7 @@ class ChatOutcomeMessage extends ChatMessage {
               ),
             ),
             Container(
-              child: Icon(status == OutcomeMessageStatus.SENT
+              child: Icon(controller.status == OutcomeMessageStatus.SENT
                   ? Icons.done
                   : Icons.access_time),
             ),

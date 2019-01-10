@@ -108,6 +108,7 @@ class ChatService {
         onReceivedSuccess(message.text);
       }
     }).then((_) {
+      // raise exception to start listening again
       throw Exception("stream from the server has been closed");
     }).catchError((e) {
       if (!_isShutdown) {
@@ -122,7 +123,7 @@ class ChatService {
         // sleep for sometime
         // new Future.delayed(const Duration(seconds: 10));
 
-        // start listen again
+        // start listening again
         this.startListening();
       }
     });
