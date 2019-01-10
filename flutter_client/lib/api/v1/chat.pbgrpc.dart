@@ -18,10 +18,10 @@ class ChatServiceClient extends Client {
       '/v1.ChatService/Send',
       ($0.StringValue value) => value.writeToBuffer(),
       (List<int> value) => new $1.Empty.fromBuffer(value));
-  static final _$subscribe = new ClientMethod<$1.Empty, Notification>(
+  static final _$subscribe = new ClientMethod<$1.Empty, Message>(
       '/v1.ChatService/Subscribe',
       ($1.Empty value) => value.writeToBuffer(),
-      (List<int> value) => new Notification.fromBuffer(value));
+      (List<int> value) => new Message.fromBuffer(value));
 
   ChatServiceClient(ClientChannel channel, {CallOptions options})
       : super(channel, options: options);
@@ -32,8 +32,7 @@ class ChatServiceClient extends Client {
     return new ResponseFuture(call);
   }
 
-  ResponseStream<Notification> subscribe($1.Empty request,
-      {CallOptions options}) {
+  ResponseStream<Message> subscribe($1.Empty request, {CallOptions options}) {
     final call = $createCall(
         _$subscribe, new $async.Stream.fromIterable([request]),
         options: options);
@@ -52,13 +51,13 @@ abstract class ChatServiceBase extends Service {
         false,
         (List<int> value) => new $0.StringValue.fromBuffer(value),
         ($1.Empty value) => value.writeToBuffer()));
-    $addMethod(new ServiceMethod<$1.Empty, Notification>(
+    $addMethod(new ServiceMethod<$1.Empty, Message>(
         'Subscribe',
         subscribe_Pre,
         false,
         true,
         (List<int> value) => new $1.Empty.fromBuffer(value),
-        (Notification value) => value.writeToBuffer()));
+        (Message value) => value.writeToBuffer()));
   }
 
   $async.Future<$1.Empty> send_Pre(
@@ -66,11 +65,11 @@ abstract class ChatServiceBase extends Service {
     return send(call, await request);
   }
 
-  $async.Stream<Notification> subscribe_Pre(
+  $async.Stream<Message> subscribe_Pre(
       ServiceCall call, $async.Future request) async* {
     yield* subscribe(call, (await request) as $1.Empty);
   }
 
   $async.Future<$1.Empty> send(ServiceCall call, $0.StringValue request);
-  $async.Stream<Notification> subscribe(ServiceCall call, $1.Empty request);
+  $async.Stream<Message> subscribe(ServiceCall call, $1.Empty request);
 }

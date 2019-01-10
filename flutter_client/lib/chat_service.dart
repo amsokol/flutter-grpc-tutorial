@@ -46,91 +46,85 @@ class ChatService {
     }
   }
 
-  Future<void> send(String uuid, String text) async {
-    do {
-      try {
-        if (_clientSend == null) {
-          // create new client
-          _clientSend = ClientChannel(
-            serverIP, // Your IP here or localhost
-            port: serverPort,
-            options: ChannelOptions(
-              //TODO: Change to secure with server certificates
-              credentials: ChannelCredentials.insecure(),
-              idleTimeout: Duration(seconds: 10),
-            ),
-          );
-        }
+  void send(String uuid, String text) {
+    if (_clientSend == null) {
+      // create new client
+      _clientSend = ClientChannel(
+        serverIP, // Your IP here or localhost
+        port: serverPort,
+        options: ChannelOptions(
+          //TODO: Change to secure with server certificates
+          credentials: ChannelCredentials.insecure(),
+          idleTimeout: Duration(seconds: 10),
+        ),
+      );
+    }
 
-        var request = StringValue.create();
-        request.value = text;
+    var request = StringValue.create();
+    request.value = text;
 
-        await ChatServiceClient(_clientSend).send(request);
-
-        // call for success handler
-        if (onSentSuccess != null) {
-          onSentSuccess(uuid, text);
-        }
-        break;
-      } catch (e) {
-        if (!_isShutdown) {
-          // invalidate current client
-          _shutdownSend();
-
-          // call for error handler
-          if (onSentError != null) {
-            onSentError(uuid, text, e.toString());
-          }
-
-          // sleep for sometime
-          // new Future.delayed(const Duration(seconds: 10));
-        }
+    ChatServiceClient(_clientSend).send(request).then((_) {
+      // call for success handler
+      if (onSentSuccess != null) {
+        onSentSuccess(uuid, text);
       }
-      // try to send again
-    } while (!_isShutdown);
+    }).catchError((e) {
+      if (!_isShutdown) {
+        // invalidate current client
+        _shutdownSend();
+
+        // call for error handler
+        if (onSentError != null) {
+          onSentError(uuid, text, e.toString());
+        }
+
+        // sleep for sometime
+        // new Future.delayed(const Duration(seconds: 10));
+
+        // try to send again
+        this.send(uuid, text);
+      }
+    });
   }
 
-  Future<void> receive() async {
-    do {
-      try {
-        if (_clientReceive == null) {
-          // create new client
-          _clientReceive = ClientChannel(
-            serverIP, // Your IP here or localhost
-            port: serverPort,
-            options: ChannelOptions(
-              //TODO: Change to secure with server certificates
-              credentials: ChannelCredentials.insecure(),
-              idleTimeout: Duration(seconds: 10),
-            ),
-          );
-        }
+  void startListening() {
+    if (_clientReceive == null) {
+      // create new client
+      _clientReceive = ClientChannel(
+        serverIP, // Your IP here or localhost
+        port: serverPort,
+        options: ChannelOptions(
+          //TODO: Change to secure with server certificates
+          credentials: ChannelCredentials.insecure(),
+          idleTimeout: Duration(seconds: 10),
+        ),
+      );
+    }
 
-        var stream =
-            ChatServiceClient(_clientReceive).subscribe(Empty.create());
+    var stream = ChatServiceClient(_clientReceive).subscribe(Empty.create());
 
-        await for (var notification in stream) {
-          if (onReceivedSuccess != null) {
-            onReceivedSuccess(notification.message);
-          }
-        }
-
-        throw Exception("stream from the server has closed");
-      } catch (e) {
-        if (!_isShutdown) {
-          // invalidate current client
-          _shutdownReceive();
-
-          // call for error handler
-          if (onReceivedError != null) {
-            onReceivedError(e.toString());
-          }
-
-          // sleep for sometime
-          // new Future.delayed(const Duration(seconds: 10));
-        }
+    stream.forEach((message) {
+      if (onReceivedSuccess != null) {
+        onReceivedSuccess(message.text);
       }
-      // try to receive again
-    } while (!_isShutdown);
+    }).then((_) {
+      throw Exception("stream from the server has been closed");
+    }).catchError((e) {
+      if (!_isShutdown) {
+        // invalidate current client
+        _shutdownReceive();
+
+        // call for error handler
+        if (onReceivedError != null) {
+          onReceivedError(e.toString());
+        }
+
+        // sleep for sometime
+        // new Future.delayed(const Duration(seconds: 10));
+
+        // start listen again
+        this.startListening();
+      }
+    });
   }
 }

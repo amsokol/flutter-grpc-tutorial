@@ -9,30 +9,30 @@ import 'dart:core' show int, bool, double, String, List, Map, override;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-class Notification extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = new $pb.BuilderInfo('Notification', package: const $pb.PackageName('v1'))
-    ..aOS(1, 'message')
+class Message extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = new $pb.BuilderInfo('Message', package: const $pb.PackageName('v1'))
+    ..aOS(1, 'text')
     ..hasRequiredFields = false
   ;
 
-  Notification() : super();
-  Notification.fromBuffer(List<int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) : super.fromBuffer(i, r);
-  Notification.fromJson(String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) : super.fromJson(i, r);
-  Notification clone() => new Notification()..mergeFromMessage(this);
-  Notification copyWith(void Function(Notification) updates) => super.copyWith((message) => updates(message as Notification));
+  Message() : super();
+  Message.fromBuffer(List<int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) : super.fromBuffer(i, r);
+  Message.fromJson(String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) : super.fromJson(i, r);
+  Message clone() => new Message()..mergeFromMessage(this);
+  Message copyWith(void Function(Message) updates) => super.copyWith((message) => updates(message as Message));
   $pb.BuilderInfo get info_ => _i;
-  static Notification create() => new Notification();
-  Notification createEmptyInstance() => create();
-  static $pb.PbList<Notification> createRepeated() => new $pb.PbList<Notification>();
-  static Notification getDefault() => _defaultInstance ??= create()..freeze();
-  static Notification _defaultInstance;
-  static void $checkItem(Notification v) {
-    if (v is! Notification) $pb.checkItemFailed(v, _i.qualifiedMessageName);
+  static Message create() => new Message();
+  Message createEmptyInstance() => create();
+  static $pb.PbList<Message> createRepeated() => new $pb.PbList<Message>();
+  static Message getDefault() => _defaultInstance ??= create()..freeze();
+  static Message _defaultInstance;
+  static void $checkItem(Message v) {
+    if (v is! Message) $pb.checkItemFailed(v, _i.qualifiedMessageName);
   }
 
-  String get message => $_getS(0, '');
-  set message(String v) { $_setString(0, v); }
-  bool hasMessage() => $_has(0);
-  void clearMessage() => clearField(1);
+  String get text => $_getS(0, '');
+  set text(String v) { $_setString(0, v); }
+  bool hasText() => $_has(0);
+  void clearText() => clearField(1);
 }
 

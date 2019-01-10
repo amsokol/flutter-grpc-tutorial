@@ -34,7 +34,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         onSentError: onSentError,
         onReceivedSuccess: onReceivedSuccess,
         onReceivedError: onReceivedError);
-    _service.receive();
+    _service.startListening();
   }
 
   @override
@@ -94,6 +94,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           children: <Widget>[
             Flexible(
               child: TextField(
+                maxLines: null,
                 textInputAction: TextInputAction.send,
                 controller: _textController,
                 onChanged: (String text) {
