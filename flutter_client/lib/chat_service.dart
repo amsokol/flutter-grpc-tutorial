@@ -84,7 +84,7 @@ class ChatService {
         }
 
         // try to send again
-        this.send(message);
+        send(message);
       }
     });
   }
@@ -125,7 +125,7 @@ class ChatService {
         }
 
         // start listening again
-        this.startListening();
+        startListening();
       }
     });
   }
