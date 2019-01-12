@@ -1,10 +1,8 @@
 import 'package:grpc/grpc.dart';
 
+import 'api/v1/chat.pbgrpc.dart' as grpc;
 import 'api/v1/google/protobuf/empty.pb.dart';
 import 'api/v1/google/protobuf/wrappers.pb.dart';
-
-import 'api/v1/chat.pbgrpc.dart' as grpc;
-
 import 'chat_message.dart';
 import 'chat_message_outcome.dart';
 

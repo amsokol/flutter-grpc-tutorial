@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'bandwidth_buffer.dart';
 import 'chat_message.dart';
-import 'chat_message_outcome.dart';
 import 'chat_message_income.dart';
+import 'chat_message_outcome.dart';
 import 'chat_service.dart';
 
 class ChatScreen extends StatefulWidget {
