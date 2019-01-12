@@ -7,7 +7,11 @@ class Message {
   String id;
   String text;
 
-  Message(this.text) : id = _uuid.v4();
+  Message(this.text, [this.id]) {
+    if (id == null) {
+      id = _uuid.v4();
+    }
+  }
 }
 
 abstract class ChatMessage extends Widget {
