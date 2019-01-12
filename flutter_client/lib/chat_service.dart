@@ -67,8 +67,10 @@ class ChatService {
     grpc.ChatServiceClient(_clientSend).send(request).then((_) {
       // call for success handler
       if (onSentSuccess != null) {
-        var sentMessage =
-            MessageOutcome(message.text, message.id, MessageOutcomeStatus.SENT);
+        var sentMessage = MessageOutcome(
+            text: message.text,
+            id: message.id,
+            status: MessageOutcomeStatus.SENT);
         onSentSuccess(sentMessage);
       }
     }).catchError((e) {

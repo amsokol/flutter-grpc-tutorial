@@ -136,7 +136,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _textController.clear();
     _isComposing = false;
 
-    var message = MessageOutcome(text);
+    var message = MessageOutcome(text: text);
 
     _bandwidthBuffer.send(message);
 

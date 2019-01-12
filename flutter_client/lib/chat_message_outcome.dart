@@ -9,7 +9,7 @@ enum MessageOutcomeStatus { UNKNOWN, SENT }
 class MessageOutcome extends Message {
   MessageOutcomeStatus status;
 
-  MessageOutcome(String text, [String id, this.status]) : super(text, id) {
+  MessageOutcome({String text, String id, this.status}) : super(text, id) {
     if (status == null) {
       this.status = MessageOutcomeStatus.UNKNOWN;
     }
