@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
+
+class Message {
+  static var _uuid = Uuid();
+
+  String id;
+  String text;
+
+  Message(this.text) : id = _uuid.v4();
+}
 
 abstract class ChatMessage extends Widget {
-  String get uuid;
+  Message get message;
   AnimationController get animationController;
 }

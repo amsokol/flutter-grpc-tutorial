@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 
+import 'bandwidth_buffer.dart';
 import 'chat_message.dart';
-import 'chat_outcome_message.dart';
-import 'chat_income_message.dart';
+import 'chat_message_outcome.dart';
+import 'chat_message_income.dart';
 import 'chat_service.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -16,12 +16,11 @@ class ChatScreen extends StatefulWidget {
 }
 
 class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
-  static var _uuid = Uuid();
-
   ChatService _service;
 
+  BandwidthBuffer _bandwidthBuffer;
+  final StreamController _streamController = StreamController<List<Message>>();
   final List<ChatMessage> _messages = <ChatMessage>[];
-  final StreamController _streamController = StreamController<ChatMessage>();
 
   final TextEditingController _textController = TextEditingController();
   bool _isComposing = false;
@@ -29,6 +28,13 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    _bandwidthBuffer = BandwidthBuffer<Message>(
+      duration: Duration(milliseconds: 500),
+      onReceive: onReceiveFromBuffer,
+    );
+
+    _bandwidthBuffer.start();
     _service = ChatService(
         onSentSuccess: onSentSuccess,
         onSentError: onSentError,
@@ -40,6 +46,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _service.shutdown();
+    _bandwidthBuffer.stop();
     for (ChatMessage message in _messages)
       message.animationController.dispose();
     super.dispose();
@@ -52,7 +59,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       body: Column(
         children: <Widget>[
           Flexible(
-            child: StreamBuilder<ChatMessage>(
+            child: StreamBuilder<List<Message>>(
               stream: _streamController.stream,
               builder: (BuildContext context, AsyncSnapshot snapshot) {
                 if (snapshot.hasError) {
@@ -64,8 +71,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     break;
                   case ConnectionState.active:
                   case ConnectionState.done:
-                    debugPrint("builder: ${snapshot.data.text}");
-                    _updateMessages(snapshot.data);
+                    _addMessages(snapshot.data);
                 }
                 return ListView.builder(
                     padding: EdgeInsets.all(8.0),
@@ -121,72 +127,77 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  void onSentSuccess(String uuid, String text) {
-    debugPrint("message \"$text\" sent to the server");
-    var i = _messages.indexWhere((msg) => msg.uuid == uuid);
-    if (i != -1) {
-      var message = _messages[i];
-      if (message is ChatOutcomeMessage) {
-        message.controller.setStatus(OutcomeMessageStatus.SENT);
-      } else {
-        debugPrint(
-            "FAILED update status for message \"$uuid\": it is not ChatOutcomeMessage");
-      }
-    } else {
-      debugPrint("FAILED to find message \"$uuid\" to update status");
-    }
+  void onSentSuccess(MessageOutcome message) {
+    debugPrint("message \"${message.text}\" sent to the server");
+    _bandwidthBuffer.send(message);
   }
 
-  void onSentError(String uuid, String text, String error) {
-    debugPrint("FAILED to send message \"$text\" to the server: $error");
+  void _handleSubmitted(String text) {
+    _textController.clear();
+//    setState(() {
+    _isComposing = false;
+//    });
+
+    var message = MessageOutcome(text);
+
+    _bandwidthBuffer.send(message);
+
+    // async send message to the server
+    _service.send(message);
   }
 
-  void onReceivedSuccess(String text) {
-    debugPrint("received message from the server: $text");
-    ChatMessage message = ChatIncomeMessage(
-      uuid: _uuid.v4(),
-      text: text,
-      animationController: AnimationController(
-        duration: Duration(milliseconds: 700),
-        vsync: this,
-      ),
-    );
-    _streamController.add(message);
+  void onSentError(Message message, String error) {
+    debugPrint(
+        "FAILED to send message \"${message.text}\" to the server: $error");
+  }
+
+  void onReceivedSuccess(Message message) {
+    debugPrint("received message from the server: ${message.text}");
+    _bandwidthBuffer.send(message);
   }
 
   void onReceivedError(String error) {
     debugPrint("FAILED to receive messages from the server: $error");
   }
 
-  void _handleSubmitted(String text) {
-    _textController.clear();
-    setState(() {
-      _isComposing = false;
-    });
-
-    var uuid = _uuid.v4();
-    ChatMessage message = ChatOutcomeMessage(
-      uuid: uuid,
-      text: text,
-      controller: ChatOutcomeMessageController(),
-      animationController: AnimationController(
-        duration: Duration(milliseconds: 700),
-        vsync: this,
-      ),
-    );
-
-    _streamController.add(message);
-
-    // async send message to the server
-    _service.send(uuid, text);
+  void onReceiveFromBuffer(List<Message> messages) {
+    _streamController.add(messages);
   }
 
-  void _updateMessages(ChatMessage message) {
-    var i = _messages.indexWhere((msg) => msg.uuid == message.uuid);
-    if (i == -1) {
-      // add new message to the chat
-      _messages.insert(0, message);
-      message.animationController.forward();
-    }
+  void _addMessages(List<Message> messages) {
+    messages.forEach((message) {
+      var i = _messages.indexWhere((msg) => msg.message.id == message.id);
+      if (i != -1) {
+        var chatMessage = _messages[i];
+        if (chatMessage is ChatMessageOutcome) {
+          assert(
+              message is MessageOutcome, "message must be MessageOutcome type");
+          chatMessage.controller.setStatus((message as MessageOutcome).status);
+        }
+      } else {
+        // new message
+        ChatMessage chatMessage;
+        var animationController = AnimationController(
+          duration: Duration(milliseconds: 700),
+          vsync: this,
+        );
+        switch (message.runtimeType) {
+          case MessageOutcome:
+            chatMessage = ChatMessageOutcome(
+              message: message,
+              animationController: animationController,
+            );
+            break;
+          default:
+            chatMessage = ChatMessageIncome(
+              message: message,
+              animationController: animationController,
+            );
+            break;
+        }
+        _messages.insert(0, chatMessage);
+        chatMessage.animationController.forward();
+      }
+    });
   }
 }

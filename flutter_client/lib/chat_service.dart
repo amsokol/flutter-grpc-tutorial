@@ -3,9 +3,12 @@ import 'package:grpc/grpc.dart';
 import 'api/v1/google/protobuf/empty.pb.dart';
 import 'api/v1/google/protobuf/wrappers.pb.dart';
 
-import 'api/v1/chat.pbgrpc.dart';
+import 'api/v1/chat.pbgrpc.dart' as grpc;
 
-const serverIP = "10.80.135.109" /*"172.16.1.18"*/;
+import 'chat_message.dart';
+import 'chat_message_outcome.dart';
+
+const serverIP = /*"10.80.135.109"*/ "172.16.1.18";
 const serverPort = 3000;
 
 class ChatService {
@@ -14,10 +17,10 @@ class ChatService {
   ClientChannel _clientSend;
   ClientChannel _clientReceive;
 
-  final void Function(String uuid, String text) onSentSuccess;
-  final void Function(String uuid, String text, String error) onSentError;
+  final void Function(MessageOutcome message) onSentSuccess;
+  final void Function(MessageOutcome message, String error) onSentError;
 
-  final void Function(String text) onReceivedSuccess;
+  final void Function(Message message) onReceivedSuccess;
   final void Function(String error) onReceivedError;
 
   ChatService(
@@ -46,7 +49,7 @@ class ChatService {
     }
   }
 
-  void send(String uuid, String text) {
+  void send(MessageOutcome message) {
     if (_clientSend == null) {
       // create new client
       _clientSend = ClientChannel(
@@ -61,12 +64,14 @@ class ChatService {
     }
 
     var request = StringValue.create();
-    request.value = text;
+    request.value = message.text;
 
-    ChatServiceClient(_clientSend).send(request).then((_) {
+    grpc.ChatServiceClient(_clientSend).send(request).then((_) {
       // call for success handler
       if (onSentSuccess != null) {
-        onSentSuccess(uuid, text);
+        var sentMessage =
+            MessageOutcome(message.text, message.id, MessageOutcomeStatus.SENT);
+        onSentSuccess(sentMessage);
       }
     }).catchError((e) {
       if (!_isShutdown) {
@@ -75,14 +80,12 @@ class ChatService {
 
         // call for error handler
         if (onSentError != null) {
-          onSentError(uuid, text, e.toString());
+          message.status = MessageOutcomeStatus.SENT;
+          onSentError(message, e.toString());
         }
 
-        // sleep for sometime
-        // new Future.delayed(const Duration(seconds: 10));
-
         // try to send again
-        this.send(uuid, text);
+        this.send(message);
       }
     });
   }
@@ -101,11 +104,13 @@ class ChatService {
       );
     }
 
-    var stream = ChatServiceClient(_clientReceive).subscribe(Empty.create());
+    var stream =
+        grpc.ChatServiceClient(_clientReceive).subscribe(Empty.create());
 
-    stream.forEach((message) {
+    stream.forEach((msg) {
       if (onReceivedSuccess != null) {
-        onReceivedSuccess(message.text);
+        var message = Message(msg.text);
+        onReceivedSuccess(message);
       }
     }).then((_) {
       // raise exception to start listening again
@@ -119,9 +124,6 @@ class ChatService {
         if (onReceivedError != null) {
           onReceivedError(e.toString());
         }
-
-        // sleep for sometime
-        // new Future.delayed(const Duration(seconds: 10));
 
         // start listening again
         this.startListening();

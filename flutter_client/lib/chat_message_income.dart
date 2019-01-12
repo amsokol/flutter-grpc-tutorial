@@ -4,13 +4,12 @@ import 'chat_message.dart';
 
 const String _server = "Server";
 
-class ChatIncomeMessage extends StatelessWidget implements ChatMessage {
-  final String uuid;
-  final String text;
+class ChatMessageIncome extends StatelessWidget implements ChatMessage {
+  final Message message;
   final AnimationController animationController;
 
-  ChatIncomeMessage({this.uuid, this.text, this.animationController})
-      : super(key: new ObjectKey(uuid));
+  ChatMessageIncome({this.message, this.animationController})
+      : super(key: new ObjectKey(message.id));
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +29,7 @@ class ChatIncomeMessage extends StatelessWidget implements ChatMessage {
                   Text(_server, style: Theme.of(context).textTheme.subhead),
                   Container(
                     margin: EdgeInsets.only(top: 5.0),
-                    child: Text(text),
+                    child: Text(message.text),
                   ),
                 ],
               ),
