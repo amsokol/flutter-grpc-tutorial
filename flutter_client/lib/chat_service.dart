@@ -78,7 +78,6 @@ class ChatService {
 
         // call for error handler
         if (onSentError != null) {
-          message.status = MessageOutcomeStatus.SENT;
           onSentError(message, e.toString());
         }
 
