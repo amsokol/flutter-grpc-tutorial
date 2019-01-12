@@ -18,7 +18,7 @@ type chatServiceServer struct {
 
 // NewChatServiceServer creates Chat service
 func NewChatServiceServer() v1.ChatServiceServer {
-	return &chatServiceServer{msg: make(chan string)}
+	return &chatServiceServer{msg: make(chan string, 1000)}
 }
 
 // Send is sync method example
@@ -40,6 +40,8 @@ func (s *chatServiceServer) Subscribe(e *empty.Empty, stream v1.ChatService_Subs
 		m := <-s.msg
 		n := v1.Message{Text: fmt.Sprintf("I have received from you: %s. Thanks!", m)}
 		if err := stream.Send(&n); err != nil {
+			// put message back to channell
+			s.msg <- m
 			log.Printf("Stream connection failed: %v", err)
 			return nil
 		}
