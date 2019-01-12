@@ -134,9 +134,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   void _handleSubmitted(String text) {
     _textController.clear();
-//    setState(() {
     _isComposing = false;
-//    });
 
     var message = MessageOutcome(text);
 
