@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'bandwidth_buffer.dart';
 import 'chat_message.dart';
-import 'chat_message_income.dart';
-import 'chat_message_outcome.dart';
+import 'chat_message_incoming.dart';
+import 'chat_message_outcoming.dart';
 import 'chat_service.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -31,7 +31,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
     _bandwidthBuffer = BandwidthBuffer<Message>(
       duration: Duration(milliseconds: 500),
-      onReceive: onReceiveFromBuffer,
+      onReceive: onReceivedFromBuffer,
     );
 
     _bandwidthBuffer.start();
@@ -127,21 +127,21 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  void onSentSuccess(MessageOutcome message) {
-    debugPrint("message \"${message.text}\" sent to the server");
-    _bandwidthBuffer.send(message);
-  }
-
   void _handleSubmitted(String text) {
     _textController.clear();
     _isComposing = false;
 
-    var message = MessageOutcome(text: text);
+    var message = MessageOutcoming(text: text);
 
     _bandwidthBuffer.send(message);
 
     // async send message to the server
     _service.send(message);
+  }
+
+  void onSentSuccess(MessageOutcoming message) {
+    debugPrint("message \"${message.text}\" sent to the server");
+    _bandwidthBuffer.send(message);
   }
 
   void onSentError(Message message, String error) {
@@ -158,7 +158,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     debugPrint("FAILED to receive messages from the server: $error");
   }
 
-  void onReceiveFromBuffer(List<Message> messages) {
+  void onReceivedFromBuffer(List<Message> messages) {
     _streamController.add(messages);
   }
 
@@ -167,10 +167,11 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       var i = _messages.indexWhere((msg) => msg.message.id == message.id);
       if (i != -1) {
         var chatMessage = _messages[i];
-        if (chatMessage is ChatMessageOutcome) {
-          assert(
-              message is MessageOutcome, "message must be MessageOutcome type");
-          chatMessage.controller.setStatus((message as MessageOutcome).status);
+        if (chatMessage is ChatMessageOutcoming) {
+          assert(message is MessageOutcoming,
+              "message must be MessageOutcome type");
+          chatMessage.controller
+              .setStatus((message as MessageOutcoming).status);
         }
       } else {
         // new message
@@ -180,14 +181,14 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           vsync: this,
         );
         switch (message.runtimeType) {
-          case MessageOutcome:
-            chatMessage = ChatMessageOutcome(
+          case MessageOutcoming:
+            chatMessage = ChatMessageOutcoming(
               message: message,
               animationController: animationController,
             );
             break;
           default:
-            chatMessage = ChatMessageIncome(
+            chatMessage = ChatMessageIncoming(
               message: message,
               animationController: animationController,
             );

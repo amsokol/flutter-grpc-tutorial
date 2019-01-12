@@ -4,25 +4,26 @@ import 'chat_message.dart';
 
 const String _name = "Me";
 
-enum MessageOutcomeStatus { UNKNOWN, SENT }
+enum MessageOutcomingStatus { UNKNOWN, SENT }
 
-class MessageOutcome extends Message {
-  MessageOutcomeStatus status;
+class MessageOutcoming extends Message {
+  MessageOutcomingStatus status;
 
-  MessageOutcome(
-      {String text, String id, this.status = MessageOutcomeStatus.UNKNOWN})
+  MessageOutcoming(
+      {String text, String id, this.status = MessageOutcomingStatus.UNKNOWN})
       : super(text, id);
 }
 
-class ChatMessageOutcomeController {
-  MessageOutcome message;
+class ChatMessageOutcomingController {
+  MessageOutcoming message;
 
-  void Function(MessageOutcomeStatus oldStatus, MessageOutcomeStatus newStatus)
+  void Function(
+          MessageOutcomingStatus oldStatus, MessageOutcomingStatus newStatus)
       onStatusChanged;
 
-  ChatMessageOutcomeController({this.message});
+  ChatMessageOutcomingController({this.message});
 
-  void setStatus(MessageOutcomeStatus newStatus) {
+  void setStatus(MessageOutcomingStatus newStatus) {
     var oldStatus = message.status;
     if (oldStatus != newStatus) {
       message.status = newStatus;
@@ -33,30 +34,30 @@ class ChatMessageOutcomeController {
   }
 }
 
-class ChatMessageOutcome extends StatefulWidget implements ChatMessage {
-  final MessageOutcome message;
-  final ChatMessageOutcomeController controller;
+class ChatMessageOutcoming extends StatefulWidget implements ChatMessage {
+  final MessageOutcoming message;
+  final ChatMessageOutcomingController controller;
   final AnimationController animationController;
 
-  ChatMessageOutcome({this.message, this.animationController})
-      : controller = ChatMessageOutcomeController(message: message),
+  ChatMessageOutcoming({this.message, this.animationController})
+      : controller = ChatMessageOutcomingController(message: message),
         super(key: new ObjectKey(message.id));
 
   @override
-  State createState() => ChatMessageOutcomeState(
+  State createState() => ChatMessageOutcomingState(
       animationController: animationController, controller: controller);
 }
 
-class ChatMessageOutcomeState extends State<ChatMessageOutcome> {
-  final ChatMessageOutcomeController controller;
+class ChatMessageOutcomingState extends State<ChatMessageOutcoming> {
+  final ChatMessageOutcomingController controller;
   final AnimationController animationController;
 
-  ChatMessageOutcomeState({this.controller, this.animationController}) {
+  ChatMessageOutcomingState({this.controller, this.animationController}) {
     controller.onStatusChanged = onStatusChanged;
   }
 
   void onStatusChanged(
-      MessageOutcomeStatus oldStatus, MessageOutcomeStatus newStatus) {
+      MessageOutcomingStatus oldStatus, MessageOutcomingStatus newStatus) {
     setState(() {});
   }
 
@@ -88,9 +89,10 @@ class ChatMessageOutcomeState extends State<ChatMessageOutcome> {
               ),
             ),
             Container(
-              child: Icon(controller.message.status == MessageOutcomeStatus.SENT
-                  ? Icons.done
-                  : Icons.access_time),
+              child: Icon(
+                  controller.message.status == MessageOutcomingStatus.SENT
+                      ? Icons.done
+                      : Icons.access_time),
             ),
           ],
         ),

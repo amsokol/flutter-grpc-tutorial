@@ -4,7 +4,7 @@ import 'api/v1/chat.pbgrpc.dart' as grpc;
 import 'api/v1/google/protobuf/empty.pb.dart';
 import 'api/v1/google/protobuf/wrappers.pb.dart';
 import 'chat_message.dart';
-import 'chat_message_outcome.dart';
+import 'chat_message_outcoming.dart';
 
 const serverIP = /*"10.80.135.109"*/ "172.16.1.18";
 const serverPort = 3000;
@@ -15,8 +15,8 @@ class ChatService {
   ClientChannel _clientSend;
   ClientChannel _clientReceive;
 
-  final void Function(MessageOutcome message) onSentSuccess;
-  final void Function(MessageOutcome message, String error) onSentError;
+  final void Function(MessageOutcoming message) onSentSuccess;
+  final void Function(MessageOutcoming message, String error) onSentError;
 
   final void Function(Message message) onReceivedSuccess;
   final void Function(String error) onReceivedError;
@@ -47,7 +47,7 @@ class ChatService {
     }
   }
 
-  void send(MessageOutcome message) {
+  void send(MessageOutcoming message) {
     if (_clientSend == null) {
       // create new client
       _clientSend = ClientChannel(
@@ -67,10 +67,10 @@ class ChatService {
     grpc.ChatServiceClient(_clientSend).send(request).then((_) {
       // call for success handler
       if (onSentSuccess != null) {
-        var sentMessage = MessageOutcome(
+        var sentMessage = MessageOutcoming(
             text: message.text,
             id: message.id,
-            status: MessageOutcomeStatus.SENT);
+            status: MessageOutcomingStatus.SENT);
         onSentSuccess(sentMessage);
       }
     }).catchError((e) {
