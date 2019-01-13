@@ -5,8 +5,9 @@ package v1;
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 
-// Message is response for MyService.Subscribe method
+// Message is response for ChatService.Subscribe method
 message Message{
+    // message bosy
     string text = 1;
 }
 
@@ -14,6 +15,6 @@ service ChatService {
     // Send send message to the server
     rpc Send(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
 
-    // Subscribe is streaming method example: server responds once a minute
+    // Subscribe is streaming method to get echo messages from the server
     rpc Subscribe(google.protobuf.Empty) returns (stream Message) {}
 }
