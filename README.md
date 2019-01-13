@@ -1,1 +1,1 @@
-# flutter-grpc-tutorial
+Source code for article [Asynchronous Flutter chat client with Go chat server which are powered by gRPC (simple and streaming)](https://medium.com/@amsokol.com/tutorial-asynchronous-flutter-chat-client-with-go-chat-server-which-are-powered-by-grpc-simple-ce913066861c)
