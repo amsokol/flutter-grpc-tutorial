@@ -10,7 +10,7 @@ import (
 	"github.com/amsokol/flutter-grpc-tutorial/go-server/pkg/api/v1"
 )
 
-// RunServer runs gRPC service to publish service
+// RunServer registers gRPC service and run server
 func RunServer(ctx context.Context, srv v1.ChatServiceServer, port string) error {
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
