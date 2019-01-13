@@ -12,7 +12,7 @@ message Message{
 }
 
 service ChatService {
-    // Send send message to the server
+    // Send sends message to the server
     rpc Send(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
 
     // Subscribe is streaming method to get echo messages from the server

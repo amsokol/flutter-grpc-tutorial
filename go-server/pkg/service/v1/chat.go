@@ -16,12 +16,12 @@ type chatServiceServer struct {
 	msg chan string
 }
 
-// NewChatServiceServer creates Chat service
+// NewChatServiceServer creates Chat service object
 func NewChatServiceServer() v1.ChatServiceServer {
 	return &chatServiceServer{msg: make(chan string, 1000)}
 }
 
-// Send is sync method example
+// Send sends message to the server
 func (s *chatServiceServer) Send(ctx context.Context, message *wrappers.StringValue) (*empty.Empty, error) {
 	if message != nil {
 		log.Printf("Send requested: message=%v", *message)
@@ -33,14 +33,14 @@ func (s *chatServiceServer) Send(ctx context.Context, message *wrappers.StringVa
 	return &empty.Empty{}, nil
 }
 
-// Subscribe is streaming method example: server responds once a minute
+// Subscribe is streaming method to get echo messages from the server
 func (s *chatServiceServer) Subscribe(e *empty.Empty, stream v1.ChatService_SubscribeServer) error {
 	log.Print("Subscribe requested")
 	for {
 		m := <-s.msg
 		n := v1.Message{Text: fmt.Sprintf("I have received from you: %s. Thanks!", m)}
 		if err := stream.Send(&n); err != nil {
-			// put message back to channell
+			// put message back to the channel
 			s.msg <- m
 			log.Printf("Stream connection failed: %v", err)
 			return nil
