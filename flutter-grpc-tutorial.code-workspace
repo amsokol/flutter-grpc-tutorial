@@ -1,13 +1,13 @@
 {
 	"folders": [
 		{
+			"path": "api"
+		},
+		{
 			"path": "flutter_client"
 		},
 		{
 			"path": "go-server"
-		},
-		{
-			"path": "api"
 		},
 		{
 			"path": "third_party"
@@ -15,11 +15,15 @@
 	],
 	"settings": {
 		"cSpell.words": [
+			"Stateful",
 			"amsokol",
 			"grpc",
 			"noname",
+			"pbgrpc",
 			"protobuf",
-			"ptypes"
+			"ptypes",
+			"uuid",
+			"vsync"
 		]
 	}
 }

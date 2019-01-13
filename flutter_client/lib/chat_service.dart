@@ -4,35 +4,49 @@ import 'api/v1/chat.pbgrpc.dart' as grpc;
 import 'api/v1/google/protobuf/empty.pb.dart';
 import 'api/v1/google/protobuf/wrappers.pb.dart';
 import 'chat_message.dart';
-import 'chat_message_outcoming.dart';
+import 'chat_message_outgoing.dart';
 
 const serverIP = /*"10.80.135.109"*/ "172.16.1.18";
 const serverPort = 3000;
 
+/// ChatService client implementation
 class ChatService {
+  /// Flag is indicating that client is shutting down
   bool _isShutdown = false;
 
+  /// gRPC client channel to send messages to the server
   ClientChannel _clientSend;
+
+  /// gRPC client channel to receive messages from the server
   ClientChannel _clientReceive;
 
-  final void Function(MessageOutcoming message) onSentSuccess;
-  final void Function(MessageOutcoming message, String error) onSentError;
+  /// Event is raised when message has been sent to the server successfully
+  final void Function(MessageOutgoing message) onSentSuccess;
 
+  /// Event is raised when message sending is failed
+  final void Function(MessageOutgoing message, String error) onSentError;
+
+  /// Event is raised when message has been received from the server
   final void Function(Message message) onReceivedSuccess;
+
+  /// Event is raised when message receiving is failed
   final void Function(String error) onReceivedError;
 
+  /// Constructor
   ChatService(
       {this.onSentSuccess,
       this.onSentError,
       this.onReceivedSuccess,
       this.onReceivedError});
 
+  // Shutdown client
   Future<void> shutdown() async {
     _isShutdown = true;
     _shutdownSend();
     _shutdownReceive();
   }
 
+  // Shutdown client (send channel)
   void _shutdownSend() {
     if (_clientSend != null) {
       _clientSend.shutdown();
@@ -40,6 +54,7 @@ class ChatService {
     }
   }
 
+  // Shutdown client (receive channel)
   void _shutdownReceive() {
     if (_clientReceive != null) {
       _clientReceive.shutdown();
@@ -47,7 +62,8 @@ class ChatService {
     }
   }
 
-  void send(MessageOutcoming message) {
+  /// Send message to the server
+  void send(MessageOutgoing message) {
     if (_clientSend == null) {
       // create new client
       _clientSend = ClientChannel(
@@ -67,10 +83,10 @@ class ChatService {
     grpc.ChatServiceClient(_clientSend).send(request).then((_) {
       // call for success handler
       if (onSentSuccess != null) {
-        var sentMessage = MessageOutcoming(
+        var sentMessage = MessageOutgoing(
             text: message.text,
             id: message.id,
-            status: MessageOutcomingStatus.SENT);
+            status: MessageOutgoingStatus.SENT);
         onSentSuccess(sentMessage);
       }
     }).catchError((e) {
@@ -89,6 +105,7 @@ class ChatService {
     });
   }
 
+  /// Start listening messages from the server
   void startListening() {
     if (_clientReceive == null) {
       // create new client

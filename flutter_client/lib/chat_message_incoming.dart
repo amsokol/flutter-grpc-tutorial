@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 
 import 'chat_message.dart';
 
+/// Incoming message author name
 const String _server = "Server";
 
+/// ChatMessageIncoming is widget to display incoming from server message
 class ChatMessageIncoming extends StatelessWidget implements ChatMessage {
+  /// Incoming message content
   final Message message;
+
+  /// Controller of animation for message widget
   final AnimationController animationController;
 
+  /// Constructor
   ChatMessageIncoming({this.message, this.animationController})
       : super(key: new ObjectKey(message.id));
 
