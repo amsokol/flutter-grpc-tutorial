@@ -6,7 +6,8 @@ import 'api/v1/google/protobuf/wrappers.pb.dart';
 import 'chat_message.dart';
 import 'chat_message_outgoing.dart';
 
-const serverIP = /*"10.80.135.109"*/ "172.16.1.18";
+/// CHANGE TO IP ADDRESS OF YOUR SERVER IF IT IS NECESSARY
+const serverIP = "127.0.0.1";
 const serverPort = 3000;
 
 /// ChatService client implementation
