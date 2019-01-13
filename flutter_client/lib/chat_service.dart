@@ -100,7 +100,9 @@ class ChatService {
         }
 
         // try to send again
-        send(message);
+        Future.delayed(Duration(seconds: 30), () {
+          send(message);
+        });
       }
     });
   }
@@ -142,7 +144,9 @@ class ChatService {
         }
 
         // start listening again
-        startListening();
+        Future.delayed(Duration(seconds: 30), () {
+          startListening();
+        });
       }
     });
   }
