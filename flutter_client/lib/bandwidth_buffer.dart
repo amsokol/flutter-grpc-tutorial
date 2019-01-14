@@ -25,7 +25,7 @@ class BandwidthBuffer<T> {
   }
 
   void _onTimeToSend(Timer t) {
-    if (onReceive != null) {
+    if (_list.length > 0 && onReceive != null) {
       var list = _list;
       _list = <T>[];
       onReceive(list);
