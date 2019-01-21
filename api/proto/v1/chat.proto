@@ -7,7 +7,7 @@ import "google/protobuf/wrappers.proto";
 
 // Message is response for ChatService.Subscribe method
 message Message{
-    // message bosy
+    // message body
     string text = 1;
 }
 
