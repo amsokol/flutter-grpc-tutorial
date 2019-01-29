@@ -24,8 +24,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// Message is response for MyService.Subscribe method
+// Message is response for ChatService.Subscribe method
 type Message struct {
+	// message body
 	Text                 string   `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -98,9 +99,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ChatServiceClient interface {
-	// Send send message to the server
+	// Send sends message to the server
 	Send(ctx context.Context, in *wrappers.StringValue, opts ...grpc.CallOption) (*empty.Empty, error)
-	// Subscribe is streaming method example: server responds once a minute
+	// Subscribe is streaming method to get echo messages from the server
 	Subscribe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (ChatService_SubscribeClient, error)
 }
 
@@ -155,9 +156,9 @@ func (x *chatServiceSubscribeClient) Recv() (*Message, error) {
 
 // ChatServiceServer is the server API for ChatService service.
 type ChatServiceServer interface {
-	// Send send message to the server
+	// Send sends message to the server
 	Send(context.Context, *wrappers.StringValue) (*empty.Empty, error)
-	// Subscribe is streaming method example: server responds once a minute
+	// Subscribe is streaming method to get echo messages from the server
 	Subscribe(*empty.Empty, ChatService_SubscribeServer) error
 }
 

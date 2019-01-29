@@ -14,10 +14,8 @@ class BandwidthBuffer<T> {
   }
 
   void stop() {
-    if (_timer != null) {
-      _timer.cancel();
-      _timer = null;
-    }
+    _timer?.cancel();
+    _timer = null;
   }
 
   void send(T t) {
