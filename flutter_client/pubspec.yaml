@@ -20,8 +20,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
 
-  grpc: ^1.0.0
-  protobuf: ^0.11.0
+  grpc: ^1.0.1
+  protobuf: ^0.13.0
 
   uuid: ^1.0.3
 
