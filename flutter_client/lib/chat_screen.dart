@@ -51,7 +51,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         onSentError: onSentError,
         onReceivedSuccess: onReceivedSuccess,
         onReceivedError: onReceivedError);
-    _service.startListening();
+    _service.start();
   }
 
   @override

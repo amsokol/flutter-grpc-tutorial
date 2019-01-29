@@ -8,7 +8,7 @@ const String _name = "Me";
 /// Outgoing message statuses
 /// UNKNOWN - message just created and is not sent yet
 /// SENT - message is sent to the server successfully
-enum MessageOutgoingStatus { UNKNOWN, SENT }
+enum MessageOutgoingStatus { UNKNOWN, SENT, FAILED }
 
 /// MessageOutgoing is class defining message data (id and text) and status
 class MessageOutgoing extends Message {
