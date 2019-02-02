@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 
 /// Message is class defining message data (id and text)
 class Message {
-  /// _uuid is unique ID generator
-  static var _uuid = Uuid();
-
   /// id is unique ID of message
   String id;
 
@@ -15,7 +11,7 @@ class Message {
   /// Class constructor
   Message(this.text, [this.id]) {
     if (id == null) {
-      id = _uuid.v4();
+      id = UniqueKey().toString();
     }
   }
 }
