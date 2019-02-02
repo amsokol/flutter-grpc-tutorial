@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'bandwidth_buffer.dart';
 import 'chat_message.dart';
 import 'chat_message_incoming.dart';
 import 'chat_message_outgoing.dart';
 import 'chat_service.dart';
+import 'theme.dart';
 
 /// Host screen widget - main window
 class ChatScreen extends StatefulWidget {
@@ -71,44 +73,55 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Friendlychat")),
-      body: Column(
-        children: <Widget>[
-          Flexible(
-            child: StreamBuilder<List<Message>>(
-              stream: _streamController.stream,
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
-                if (snapshot.hasError) {
-                  return Text("Error: ${snapshot.error}");
-                }
-                switch (snapshot.connectionState) {
-                  case ConnectionState.none:
-                  case ConnectionState.waiting:
-                    break;
-                  case ConnectionState.active:
-                  case ConnectionState.done:
-                    _addMessages(snapshot.data);
-                }
-                return ListView.builder(
-                    padding: EdgeInsets.all(8.0),
-                    reverse: true,
-                    itemBuilder: (_, int index) => _messages[index],
-                    itemCount: _messages.length);
-              },
-            ),
-          ),
-          Divider(height: 1.0),
-          Container(
-            decoration: BoxDecoration(color: Theme.of(context).cardColor),
-            child: _buildTextComposer(),
-          ),
-        ],
+      appBar: AppBar(
+        title: Text("Friendlychat"),
+        elevation: isIOS(context) ? 0.0 : 4.0,
       ),
+      body: new Container(
+          child: new Column(
+            children: <Widget>[
+              Flexible(
+                child: StreamBuilder<List<Message>>(
+                  stream: _streamController.stream,
+                  builder: (BuildContext context, AsyncSnapshot snapshot) {
+                    if (snapshot.hasError) {
+                      return Text("Error: ${snapshot.error}");
+                    }
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.none:
+                      case ConnectionState.waiting:
+                        break;
+                      case ConnectionState.active:
+                      case ConnectionState.done:
+                        _addMessages(snapshot.data);
+                    }
+                    return ListView.builder(
+                        padding: EdgeInsets.all(8.0),
+                        reverse: true,
+                        itemBuilder: (_, int index) => _messages[index],
+                        itemCount: _messages.length);
+                  },
+                ),
+              ),
+              Divider(height: 1.0),
+              Container(
+                decoration: BoxDecoration(color: Theme.of(context).cardColor),
+                child: _buildTextComposer(context),
+              ),
+            ],
+          ),
+          decoration: isIOS(context)
+              ? new BoxDecoration(
+                  border: new Border(
+                    top: new BorderSide(color: Colors.grey[200]),
+                  ),
+                )
+              : null),
     );
   }
 
   /// Look at the https://codelabs.developers.google.com/codelabs/flutter/#4
-  Widget _buildTextComposer() {
+  Widget _buildTextComposer(BuildContext context) {
     return IconTheme(
       data: IconThemeData(color: Theme.of(context).accentColor),
       child: Container(
@@ -132,11 +145,19 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             ),
             Container(
               margin: EdgeInsets.symmetric(horizontal: 4.0),
-              child: IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: _isComposing
-                      ? () => _handleSubmitted(_textController.text)
-                      : null),
+              child: isIOS(context)
+                  ? new CupertinoButton(
+                      child: new Text("Send"),
+                      onPressed: _isComposing
+                          ? () => _handleSubmitted(_textController.text)
+                          : null,
+                    )
+                  : new IconButton(
+                      icon: new Icon(Icons.send),
+                      onPressed: _isComposing
+                          ? () => _handleSubmitted(_textController.text)
+                          : null,
+                    ),
             ),
           ],
         ),
