@@ -61,7 +61,7 @@ class ChatMessageOutgoing extends StatefulWidget implements ChatMessage {
   /// Constructor
   ChatMessageOutgoing({this.message, this.animationController})
       : controller = ChatMessageOutgoingController(message: message),
-        super(key: new ObjectKey(message.id));
+        super(key: Key(message.id));
 
   @override
   State createState() => ChatMessageOutgoingState(

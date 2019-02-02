@@ -15,7 +15,7 @@ class ChatMessageIncoming extends StatelessWidget implements ChatMessage {
 
   /// Constructor
   ChatMessageIncoming({this.message, this.animationController})
-      : super(key: new ObjectKey(message.id));
+      : super(key: Key(message.id));
 
   @override
   Widget build(BuildContext context) {
