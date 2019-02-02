@@ -129,19 +129,31 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         child: Row(
           children: <Widget>[
             Flexible(
-              child: TextField(
-                maxLines: null,
-                textInputAction: TextInputAction.send,
-                controller: _textController,
-                onChanged: (String text) {
-                  setState(() {
-                    _isComposing = text.length > 0;
-                  });
-                },
-                onSubmitted: _isComposing ? _handleSubmitted : null,
-                decoration:
-                    InputDecoration.collapsed(hintText: "Send a message"),
-              ),
+              child: isIOS(context)
+                  ? CupertinoTextField(
+                      maxLines: null,
+                      textInputAction: TextInputAction.send,
+                      controller: _textController,
+                      onChanged: (String text) {
+                        setState(() {
+                          _isComposing = text.length > 0;
+                        });
+                      },
+                      onSubmitted: _isComposing ? _handleSubmitted : null,
+                    )
+                  : TextField(
+                      maxLines: null,
+                      textInputAction: TextInputAction.send,
+                      controller: _textController,
+                      onChanged: (String text) {
+                        setState(() {
+                          _isComposing = text.length > 0;
+                        });
+                      },
+                      onSubmitted: _isComposing ? _handleSubmitted : null,
+                      decoration:
+                          InputDecoration.collapsed(hintText: "Send a message"),
+                    ),
             ),
             Container(
               margin: EdgeInsets.symmetric(horizontal: 4.0),
