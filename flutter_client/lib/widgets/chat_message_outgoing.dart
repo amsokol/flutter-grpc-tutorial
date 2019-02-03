@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_client/models/message_outgoing.dart';
+
 import 'chat_message.dart';
 
-/// Incoming message author name
-const String _server = "Server";
+/// Outgoing message author name
+const String _name = "Me";
 
-/// ChatMessageIncoming is widget to display incoming from server message
-class ChatMessageIncoming extends StatelessWidget implements ChatMessage {
+/// ChatMessageOutgoing is widget to display outgoing to server message
+class ChatMessageOutgoing extends StatelessWidget implements ChatMessage {
   /// Incoming message content
-  final Message message;
+  final MessageOutgoing message;
 
   /// Controller of animation for message widget
   final AnimationController animationController;
 
   /// Constructor
-  ChatMessageIncoming({this.message, this.animationController})
+  ChatMessageOutgoing({this.message, this.animationController})
       : super(key: Key(message.id));
 
   @override
@@ -28,11 +30,15 @@ class ChatMessageIncoming extends StatelessWidget implements ChatMessage {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            Container(
+              margin: EdgeInsets.only(right: 16.0),
+              child: CircleAvatar(child: Text(_name[0])),
+            ),
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(_server, style: Theme.of(context).textTheme.subhead),
+                  Text(_name, style: Theme.of(context).textTheme.subhead),
                   Container(
                     margin: EdgeInsets.only(top: 5.0),
                     child: Text(message.text),
@@ -41,10 +47,9 @@ class ChatMessageIncoming extends StatelessWidget implements ChatMessage {
               ),
             ),
             Container(
-              margin: EdgeInsets.only(left: 16.0),
-              child: CircleAvatar(
-                  backgroundColor: Colors.pink.shade600,
-                  child: Text(_server[0])),
+              child: Icon(message.status == MessageOutgoingStatus.SENT
+                  ? Icons.done
+                  : Icons.access_time),
             ),
           ],
         ),

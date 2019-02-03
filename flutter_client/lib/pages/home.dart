@@ -1,33 +1,33 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-import 'bandwidth_buffer.dart';
-import 'chat_message.dart';
-import 'chat_message_incoming.dart';
-import 'chat_message_outgoing.dart';
-import 'chat_service.dart';
-import 'theme.dart';
+import 'package:flutter_client/blocs/application_bloc.dart';
+import 'package:flutter_client/blocs/bloc_provider.dart';
+import 'package:flutter_client/blocs/message_events.dart';
+
+import 'package:flutter_client/models/message.dart';
+import 'package:flutter_client/models/message_incoming.dart';
+import 'package:flutter_client/models/message_outgoing.dart';
+
+import 'package:flutter_client/theme.dart';
+
+import 'package:flutter_client/widgets/chat_message.dart';
+import 'package:flutter_client/widgets/chat_message_incoming.dart';
+import 'package:flutter_client/widgets/chat_message_outgoing.dart';
 
 /// Host screen widget - main window
-class ChatScreen extends StatefulWidget {
-  ChatScreen() : super(key: new ObjectKey("Main window"));
+class HomePage extends StatefulWidget {
+  // Constructor
+  HomePage() : super(key: new ObjectKey("Main window"));
 
   @override
-  State createState() => ChatScreenState();
+  State createState() => HomePageState();
 }
 
-/// State for ChatScreen widget
-class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
-  /// Chat client service
-  ChatService _service;
-
-  /// Look at the https://github.com/flutter/flutter/issues/26375
-  BandwidthBuffer _bandwidthBuffer;
-
-  /// Stream controller to add messages to the ListView
-  final StreamController _streamController = StreamController<List<Message>>();
+/// State for main window
+class HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  // BLoc for application
+  ApplicationBloc _appBloc;
 
   /// Chat messages list to display into ListView
   final List<ChatMessage> _messages = <ChatMessage>[];
@@ -36,34 +36,24 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final TextEditingController _textController = TextEditingController();
   bool _isComposing = false;
 
+  bool _isInit = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    // initialize bandwidth buffer for chat messages display
-    _bandwidthBuffer = BandwidthBuffer<Message>(
-      duration: Duration(milliseconds: 500),
-      onReceive: onReceivedFromBuffer,
-    );
-    _bandwidthBuffer.start();
-
-    // initialize Chat client service
-    _service = ChatService(
-        onSentSuccess: onSentSuccess,
-        onSentError: onSentError,
-        onReceivedSuccess: onReceivedSuccess,
-        onReceivedError: onReceivedError);
-    _service.start();
+    // As the context of not yet available at initState() level,
+    // if not yet initialized, we get the list of all genres
+    // and retrieve the currently selected one, as well as the
+    // filter parameters
+    if (_isInit == false) {
+      _appBloc = BlocProvider.of<ApplicationBloc>(context);
+      _isInit = true;
+    }
   }
 
   @override
   void dispose() {
-    // close Chat client service
-    _service.shutdown();
-
-    // close bandwidth buffer
-    _bandwidthBuffer.stop();
-
     // free UI resources
     for (ChatMessage message in _messages)
       message.animationController.dispose();
@@ -74,26 +64,22 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Friendlychat"),
+        title: Text('Friendlychat'),
         elevation: isIOS(context) ? 0.0 : 4.0,
       ),
       body: new Container(
           child: new Column(
             children: <Widget>[
               Flexible(
-                child: StreamBuilder<List<Message>>(
-                  stream: _streamController.stream,
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
+                child: StreamBuilder(
+                  stream: _appBloc.outMessages,
+                  builder: (BuildContext context,
+                      AsyncSnapshot<List<Message>> snapshot) {
                     if (snapshot.hasError) {
                       return Text("Error: ${snapshot.error}");
-                    }
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.none:
-                      case ConnectionState.waiting:
-                        break;
-                      case ConnectionState.active:
-                      case ConnectionState.done:
-                        _addMessages(snapshot.data);
+                    } else if (snapshot.hasData) {
+                      // update messages according to the data
+                      _updateMessages(snapshot.data);
                     }
                     return ListView.builder(
                         padding: EdgeInsets.all(8.0),
@@ -131,6 +117,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             Flexible(
               child: isIOS(context)
                   ? CupertinoTextField(
+                      key: Key('message-text-field'),
                       maxLines: null,
                       textInputAction: TextInputAction.send,
                       controller: _textController,
@@ -142,6 +129,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       onSubmitted: _isComposing ? _handleSubmitted : null,
                     )
                   : TextField(
+                      key: Key('message-text-field'),
                       maxLines: null,
                       textInputAction: TextInputAction.send,
                       controller: _textController,
@@ -165,6 +153,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                           : null,
                     )
                   : new IconButton(
+                      key: Key('send-button'),
                       icon: new Icon(Icons.send),
                       onPressed: _isComposing
                           ? () => _handleSubmitted(_textController.text)
@@ -182,91 +171,65 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _textController.clear();
     _isComposing = false;
 
-    // create new message from input text
-    var message = MessageOutgoing(text: text);
-
-    // send message to the display stream through the bandwidth buffer
-    _bandwidthBuffer.send(message);
-
-    // async send message to the server
-    _service.send(message);
-  }
-
-  /// 'outgoing message sent to the server' event
-  void onSentSuccess(MessageOutgoing message) {
-    debugPrint("message \"${message.text}\" sent to the server");
-    // send updated message to the display stream through the bandwidth buffer
-    _bandwidthBuffer.send(message);
-  }
-
-  /// 'failed to send message' event
-  void onSentError(Message message, String error) {
-    debugPrint(
-        "FAILED to send message \"${message.text}\" to the server: $error");
-  }
-
-  /// 'new incoming message received from the server' event
-  void onReceivedSuccess(Message message) {
-    debugPrint("received message from the server: ${message.text}");
-    // send updated message to the display stream through the bandwidth buffer
-    _bandwidthBuffer.send(message);
-  }
-
-  /// 'failed to receive messages' event
-  void onReceivedError(String error) {
-    debugPrint("FAILED to receive messages from the server: $error");
-  }
-
-  /// this event means 'the message (or messages) can be displayed'
-  /// Look at the https://github.com/flutter/flutter/issues/26375
-  void onReceivedFromBuffer(List<Message> messages) {
-    // send message(s) to the ListView stream
-    _streamController.add(messages);
+    _appBloc.inNewMessageCreated
+        .add(MessageNewCreatedEvent(message: MessageOutgoing(text: text)));
   }
 
   /// this methods is called to display new (outgoing or incoming) message or
   /// update status of existing outgoing message
-  void _addMessages(List<Message> messages) {
-    messages.forEach((message) {
-      // check if message with the same ID is already existed
-      var i = _messages.indexWhere((msg) => msg.message.id == message.id);
+  void _updateMessages(List<Message> messages) {
+    for (var message in messages) {
+      int i = _messages.indexWhere((msg) => msg.message.id == message.id);
       if (i != -1) {
-        // found
-        var chatMessage = _messages[i];
-        if (chatMessage is ChatMessageOutgoing) {
-          assert(message is MessageOutgoing,
-              "message must be MessageOutcome type");
-          // update status for outgoing message (from UNKNOWN to SENT)
-          chatMessage.controller.setStatus((message as MessageOutgoing).status);
+        // existing message
+        if (message is MessageOutgoing) {
+          // update existing message
+          var chatMessage = _messages[i];
+          if (chatMessage is ChatMessageOutgoing) {
+            if (chatMessage.message.status != message.status) {
+              // dispose previous message
+              chatMessage.animationController.dispose();
+              // update status for outgoing message
+              _messages[i] = ChatMessageOutgoing(
+                message: MessageOutgoing.copy(message),
+                animationController: AnimationController(
+                  duration: Duration.zero,
+                  vsync: this,
+                ),
+              );
+            }
+            _messages[i].animationController.forward();
+          } else {
+            assert(false, 'Message must be MessageOutcome type');
+          }
         }
       } else {
-        // new message
         ChatMessage chatMessage;
+        // new message
         var animationController = AnimationController(
           duration: Duration(milliseconds: 700),
           vsync: this,
         );
-        switch (message.runtimeType) {
-          case MessageOutgoing:
-            // add new outgoing message
-            chatMessage = ChatMessageOutgoing(
-              message: message,
-              animationController: animationController,
-            );
-            break;
-          default:
-            // add new incoming message
-            chatMessage = ChatMessageIncoming(
-              message: message,
-              animationController: animationController,
-            );
-            break;
+        if (message is MessageOutgoing) {
+          // add new outgoing message
+          chatMessage = ChatMessageOutgoing(
+            message: MessageOutgoing.copy(message),
+            animationController: animationController,
+          );
+        } else if (message is MessageIncoming) {
+          // add new incoming message
+          chatMessage = ChatMessageIncoming(
+            message: MessageIncoming.copy(message),
+            animationController: animationController,
+          );
+        } else {
+          assert(false, 'Unknown message type ${message.runtimeType}');
         }
         _messages.insert(0, chatMessage);
 
         // look at the https://codelabs.developers.google.com/codelabs/flutter/#6
         chatMessage.animationController.forward();
       }
-    });
+    }
   }
 }

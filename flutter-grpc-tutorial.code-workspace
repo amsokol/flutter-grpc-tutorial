@@ -24,6 +24,7 @@
 			"pbgrpc",
 			"protobuf",
 			"ptypes",
+			"rxdart",
 			"uuid",
 			"vsync"
 		]

@@ -2,14 +2,15 @@ import 'dart:isolate';
 import 'dart:io';
 import 'package:grpc/grpc.dart';
 
-import 'api/v1/chat.pbgrpc.dart' as grpc;
-import 'api/v1/google/protobuf/empty.pb.dart';
-import 'api/v1/google/protobuf/wrappers.pb.dart';
-import 'chat_message.dart';
-import 'chat_message_outgoing.dart';
+import 'package:flutter_client/blocs/message_events.dart';
+import 'package:flutter_client/models/message_outgoing.dart';
+
+import 'v1/chat.pbgrpc.dart' as grpc;
+import 'v1/google/protobuf/empty.pb.dart';
+import 'v1/google/protobuf/wrappers.pb.dart';
 
 /// CHANGE TO IP ADDRESS OF YOUR SERVER IF IT IS NECESSARY
-const serverIP = "10.0.2.2";
+const serverIP = "172.16.1.18";
 const serverPort = 3000;
 
 /// ChatService client implementation
@@ -30,23 +31,23 @@ class ChatService {
   ReceivePort _portReceiving;
 
   /// Event is raised when message has been sent to the server successfully
-  final void Function(MessageOutgoing message) onSentSuccess;
+  final void Function(MessageSentEvent event) onMessageSent;
 
   /// Event is raised when message sending is failed
-  final void Function(MessageOutgoing message, String error) onSentError;
+  final void Function(MessageSendFailedEvent event) onMessageSendFailed;
 
   /// Event is raised when message has been received from the server
-  final void Function(Message message) onReceivedSuccess;
+  final void Function(MessageReceivedEvent event) onMessageReceived;
 
   /// Event is raised when message receiving is failed
-  final void Function(String error) onReceivedError;
+  final void Function(MessageReceiveFailedEvent event) onMessageReceiveFailed;
 
   /// Constructor
   ChatService(
-      {this.onSentSuccess,
-      this.onSentError,
-      this.onReceivedSuccess,
-      this.onReceivedError})
+      {this.onMessageSent,
+      this.onMessageSendFailed,
+      this.onMessageReceived,
+      this.onMessageReceiveFailed})
       : _portSendStatus = ReceivePort(),
         _portReceiving = ReceivePort();
 
@@ -63,32 +64,21 @@ class ChatService {
         await Isolate.spawn(_sendingIsolate, _portSendStatus.sendPort);
 
     // listen send status
-    await for (var msg in _portSendStatus) {
-      if (msg is SendPort) {
-        _portSending = msg;
-      } else {
-        var message = msg[0] as MessageOutgoing;
-        var statusDetails = msg[1] as String;
-        switch (message.status) {
-          case MessageOutgoingStatus.SENT:
-            // call for success handler
-            if (onSentSuccess != null) {
-              onSentSuccess(message);
-            }
-            break;
-          case MessageOutgoingStatus.FAILED:
-            // call for error handler
-            if (onSentError != null) {
-              onSentError(message, statusDetails);
-            }
-            break;
-          default:
-            // call for error handler
-            if (onSentError != null) {
-              onSentError(message, "unexpected message status");
-            }
-            break;
+    await for (var event in _portSendStatus) {
+      if (event is SendPort) {
+        _portSending = event;
+      } else if (event is MessageSentEvent) {
+        // call for success handler
+        if (onMessageSent != null) {
+          onMessageSent(event);
         }
+      } else if (event is MessageSendFailedEvent) {
+        // call for error handler
+        if (onMessageSendFailed != null) {
+          onMessageSendFailed(event);
+        }
+      } else {
+        assert(false, 'Unknown event type ${event.runtimeType}');
       }
     }
   }
@@ -107,21 +97,16 @@ class ChatService {
     await for (MessageOutgoing message in portSendMessages) {
       var sent = false;
       do {
-        if (client == null) {
-          // create new client
-          client = ClientChannel(
-            serverIP, // Your IP here or localhost
-            port: serverPort,
-            options: ChannelOptions(
-              //TODO: Change to secure with server certificates
-              credentials: ChannelCredentials.insecure(),
-              idleTimeout: Duration(seconds: 1),
-            ),
-          );
-        }
-
-        MessageOutgoingStatus statusCode;
-        String statusDetails;
+        // create new client
+        client ??= ClientChannel(
+          serverIP, // Your IP here or localhost
+          port: serverPort,
+          options: ChannelOptions(
+            //TODO: Change to secure with server certificates
+            credentials: ChannelCredentials.insecure(),
+            idleTimeout: Duration(seconds: 1),
+          ),
+        );
 
         try {
           // try to send
@@ -129,22 +114,15 @@ class ChatService {
           request.value = message.text;
           await grpc.ChatServiceClient(client).send(request);
           // sent successfully
-          statusCode = MessageOutgoingStatus.SENT;
+          portSendStatus.send(MessageSentEvent(id: message.id));
           sent = true;
         } catch (e) {
           // sent failed
-          statusCode = MessageOutgoingStatus.FAILED;
-          statusDetails = e.toString();
+          portSendStatus.send(
+              MessageSendFailedEvent(id: message.id, error: e.toString()));
           // reset client
           client.shutdown();
           client = null;
-        } finally {
-          var msg = MessageOutgoing(
-              text: message.text, id: message.id, status: statusCode);
-          portSendStatus.send([
-            msg,
-            statusDetails,
-          ]);
         }
 
         if (!sent) {
@@ -162,17 +140,14 @@ class ChatService {
         await Isolate.spawn(_receivingIsolate, _portReceiving.sendPort);
 
     // listen for incoming messages
-    await for (var msg in _portReceiving) {
-      var message = msg[0] as Message;
-      var error = msg[1] as String;
-      if (error != null) {
-        // call for error handler
-        if (onReceivedError != null) {
-          onReceivedError(error);
+    await for (var event in _portReceiving) {
+      if (event is MessageReceivedEvent) {
+        if (onMessageReceived != null) {
+          onMessageReceived(event);
         }
-      } else {
-        if (onReceivedSuccess != null) {
-          onReceivedSuccess(message);
+      } else if (event is MessageReceiveFailedEvent) {
+        if (onMessageReceiveFailed != null) {
+          onMessageReceiveFailed(event);
         }
       }
     }
@@ -183,32 +158,29 @@ class ChatService {
     ClientChannel client;
 
     do {
-      if (client == null) {
-        // create new client
-        client = ClientChannel(
-          serverIP, // Your IP here or localhost
-          port: serverPort,
-          options: ChannelOptions(
-            //TODO: Change to secure with server certificates
-            credentials: ChannelCredentials.insecure(),
-            idleTimeout: Duration(seconds: 1),
-          ),
-        );
-      }
+      // create new client
+      client ??= ClientChannel(
+        serverIP, // Your IP here or localhost
+        port: serverPort,
+        options: ChannelOptions(
+          //TODO: Change to secure with server certificates
+          credentials: ChannelCredentials.insecure(),
+          idleTimeout: Duration(seconds: 1),
+        ),
+      );
 
       var stream = grpc.ChatServiceClient(client).subscribe(Empty.create());
 
       try {
-        await for (var msg in stream) {
-          var message = Message(msg.text);
-          portReceive.send([message, null]);
+        await for (var message in stream) {
+          portReceive.send(MessageReceivedEvent(text: message.text));
         }
       } catch (e) {
+        // notify caller
+        portReceive.send(MessageReceiveFailedEvent(error: e.toString()));
         // reset client
         client.shutdown();
         client = null;
-        // notify caller
-        portReceive.send([null, e.toString()]);
       }
       // try to connect again
       sleep(Duration(seconds: 5));
@@ -232,6 +204,7 @@ class ChatService {
 
   /// Send message to the server
   void send(MessageOutgoing message) {
+    assert(_portSending != null, "Port to send message can't be null");
     _portSending.send(message);
   }
 }
