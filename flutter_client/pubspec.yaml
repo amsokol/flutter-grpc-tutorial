@@ -21,7 +21,7 @@ dependencies:
   cupertino_icons: ^0.1.2
 
   grpc: ^1.0.1
-  protobuf: ^0.13.0
+  protobuf: ^0.13.1
 
   rxdart: ^0.20.0
 
