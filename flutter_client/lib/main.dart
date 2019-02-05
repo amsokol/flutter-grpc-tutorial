@@ -43,7 +43,6 @@ class _AppState extends State<App> {
     // gRPC isolates
     if (_isInit == false) {
       _appBloc = BlocProvider.of<ApplicationBloc>(context);
-      _listenMessagesToSend();
 
       // initialize Chat client service
       _service = ChatService(
@@ -52,6 +51,8 @@ class _AppState extends State<App> {
           onMessageReceived: _onMessageReceived,
           onMessageReceiveFailed: _onMessageReceiveFailed);
       _service.start();
+
+      _listenMessagesToSend();
 
       if (mounted) {
         setState(() {
