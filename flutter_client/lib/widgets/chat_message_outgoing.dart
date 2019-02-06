@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:shimmer/shimmer.dart';
+
 import 'package:flutter_client/models/message_outgoing.dart';
+import 'package:flutter_client/theme.dart';
 
 import 'chat_message.dart';
 
@@ -35,16 +38,7 @@ class ChatMessageOutgoing extends StatelessWidget implements ChatMessage {
               child: CircleAvatar(child: Text(_name[0])),
             ),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(_name, style: Theme.of(context).textTheme.subhead),
-                  Container(
-                    margin: EdgeInsets.only(top: 5.0),
-                    child: Text(message.text),
-                  ),
-                ],
-              ),
+              child: _getMessageContent(context),
             ),
             Container(
               child: Icon(message.status == MessageOutgoingStatus.SENT
@@ -55,5 +49,26 @@ class ChatMessageOutgoing extends StatelessWidget implements ChatMessage {
         ),
       ),
     );
+  }
+
+  Widget _getMessageContent(BuildContext context) {
+    var content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(_name, style: Theme.of(context).textTheme.subhead),
+        Container(
+          margin: EdgeInsets.only(top: 5.0),
+          child: Text(message.text),
+        ),
+      ],
+    );
+    if (message.status != MessageOutgoingStatus.SENT) {
+      return Shimmer.fromColors(
+        baseColor: shimmerBaseColor,
+        highlightColor: shimmerHighlightColor,
+        child: content,
+      );
+    }
+    return content;
   }
 }

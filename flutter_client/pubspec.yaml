@@ -25,6 +25,8 @@ dependencies:
 
   rxdart: ^0.20.0
 
+  shimmer: ^1.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
